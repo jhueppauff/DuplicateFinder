@@ -3,6 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <SignAssembly>false</SignAssembly>
+    <Authors>Julian Hüppauff</Authors>
+    <Copyright></Copyright>
+    <RepositoryUrl>https://github.com/jhueppauff/DuplicateFinder</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/jhueppauff/DuplicateFinder</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>

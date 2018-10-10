@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <SignAssembly>false</SignAssembly>
     <Authors>Julian Hüppauff</Authors>
-    <Copyright></Copyright>
+    <Copyright>Copyright 2018 Julian Hüppauff</Copyright>
     <RepositoryUrl>https://github.com/jhueppauff/DuplicateFinder</RepositoryUrl>
     <PackageProjectUrl>https://github.com/jhueppauff/DuplicateFinder</PackageProjectUrl>
   </PropertyGroup>

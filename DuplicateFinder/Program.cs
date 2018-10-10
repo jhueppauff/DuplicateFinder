@@ -1,13 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 namespace DuplicateFinder
 {
@@ -29,6 +27,8 @@ namespace DuplicateFinder
         private static void MainProcess()
         {
             List<Models.File> SourceFiles = new List<Models.File>();
+
+            Console.WriteLine("Started Target Directory");
 
             DirectoryInfo directoryInfoSource = new DirectoryInfo(configuration.GetSection("SourcePath").Value);
 
@@ -54,11 +54,14 @@ namespace DuplicateFinder
                     Console.ResetColor();
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine(ex.Message);
-                }   
+                }
             }
 
             string jsonSource = JsonConvert.SerializeObject(SourceFiles);
             System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
+
+            Console.WriteLine("Finished Source Directory");
+            Console.WriteLine("Started Target Directory");
 
             List<Models.File> DestinationFiles = new List<Models.File>();
             DirectoryInfo directoryInfoTarget = new DirectoryInfo(configuration.GetSection("DestinationPath").Value);
@@ -93,6 +96,8 @@ namespace DuplicateFinder
 
             Compare(SourceFiles, DestinationFiles);
 
+
+            Console.WriteLine("Finished, press any key to exit!");
             Console.ReadLine();
         }
 
@@ -104,8 +109,10 @@ namespace DuplicateFinder
             {
                 foreach (var itemDest in Source)
                 {
-                    Models.FileMatch fileMatch = new Models.FileMatch();
-                    fileMatch.TypesMatched = new List<string>();
+                    Models.FileMatch fileMatch = new Models.FileMatch
+                    {
+                        TypesMatched = new List<string>()
+                    };
 
                     if (item.CreateDate == itemDest.CreateDate)
                     {

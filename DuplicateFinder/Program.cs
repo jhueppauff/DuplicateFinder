@@ -15,7 +15,7 @@ namespace DuplicateFinder
 
         public static void Main(string[] args)
         {
-            Console.WriteLine("Welcome to the File Converter");
+            Console.WriteLine("Welcome to the File Duplicate Finder");
 
             // Create service collection
             ServiceCollection serviceCollection = new ServiceCollection();

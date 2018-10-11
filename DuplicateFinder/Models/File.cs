@@ -15,9 +15,5 @@ namespace DuplicateFinder.Models
         public string Path { get; set; }
 
         public DateTime ModfiedDate { get; set; }
-
-        public string Creator { get; set; }
-
-        public string ErrorMessage { get; set; }
     }
 }

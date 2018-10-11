@@ -8,6 +8,8 @@
     <Copyright>Copyright 2018 Julian Hüppauff</Copyright>
     <RepositoryUrl>https://github.com/jhueppauff/DuplicateFinder</RepositoryUrl>
     <PackageProjectUrl>https://github.com/jhueppauff/DuplicateFinder</PackageProjectUrl>
+    <ApplicationIcon />
+    <StartupObject />
   </PropertyGroup>
 
   <ItemGroup>

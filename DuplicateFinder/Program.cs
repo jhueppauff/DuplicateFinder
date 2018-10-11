@@ -28,37 +28,60 @@ namespace DuplicateFinder
         {
             List<Models.File> SourceFiles = new List<Models.File>();
 
-            Console.WriteLine("Started Target Directory");
+            Console.WriteLine("Started Source Directory");
 
-            DirectoryInfo directoryInfoSource = new DirectoryInfo(configuration.GetSection("SourcePath").Value);
-
-            foreach (var item in directoryInfoSource.EnumerateFiles("*", SearchOption.AllDirectories))
+            if (!string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
             {
+                Console.WriteLine("Found Source Json, skipping read of Directory");
                 try
                 {
-                    Models.File file = new Models.File
-                    {
-                        CreateDate = item.CreationTime,
-                        ModfiedDate = item.LastWriteTime,
-                        Name = item.Name,
-                        Path = item.FullName,
-                        Size = item.Length,
-                        Hash = GetFileHash(item.FullName)
-                    };
-
-                    SourceFiles.Add(file);
+                    string json = System.IO.File.ReadAllText(configuration.GetSection("SourceJson").Value);
+                    SourceFiles = JsonConvert.DeserializeObject<List<Models.File>>(json);
                 }
-
                 catch (Exception ex)
                 {
                     Console.ResetColor();
                     Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Error while reading Source JSON:");
                     Console.WriteLine(ex.Message);
+                    throw;
+                }
+            }
+            else
+            {
+                DirectoryInfo directoryInfoSource = new DirectoryInfo(configuration.GetSection("SourcePath").Value);
+
+                foreach (var item in directoryInfoSource.EnumerateFiles("*", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        Models.File file = new Models.File
+                        {
+                            CreateDate = item.CreationTime,
+                            ModfiedDate = item.LastWriteTime,
+                            Name = item.Name,
+                            Path = item.FullName,
+                            Size = item.Length,
+                            Hash = GetFileHash(item.FullName)
+                        };
+
+                        SourceFiles.Add(file);
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
 
-            string jsonSource = JsonConvert.SerializeObject(SourceFiles);
-            System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
+            if (string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
+            {
+                string jsonSource = JsonConvert.SerializeObject(SourceFiles);
+                System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
+            }
 
             Console.WriteLine("Finished Source Directory");
             Console.WriteLine("Started Target Directory");
@@ -70,6 +93,14 @@ namespace DuplicateFinder
             {
                 try
                 {
+                    if (item.DirectoryName.ToLowerInvariant().Contains(configuration.GetSection("SourcePath").Value.ToLowerInvariant()))
+                    {
+                        Console.ResetColor();
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.WriteLine($"Info: Skipping File, as it is in the SourceDirectory {item.FullName}");
+                        continue;
+                    }
+
                     Models.File file = new Models.File
                     {
                         CreateDate = item.CreationTime,
@@ -109,6 +140,11 @@ namespace DuplicateFinder
             {
                 foreach (var itemDest in Source)
                 {
+                    if (item.Name.ToLowerInvariant() == "thumbs.db")
+                    {
+                        continue;
+                    }
+
                     Models.FileMatch fileMatch = new Models.FileMatch
                     {
                         TypesMatched = new List<string>()
@@ -140,7 +176,6 @@ namespace DuplicateFinder
 
                     if (item.Size == itemDest.Size)
                     {
-                        fileMatch.Match = true;
                         fileMatch.TypesMatched.Add("Size");
                     }
 

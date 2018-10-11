@@ -79,7 +79,7 @@ namespace DuplicateFinder
 
             if (string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
             {
-                string jsonSource = JsonConvert.SerializeObject(SourceFiles);
+                string jsonSource = JsonConvert.SerializeObject(SourceFiles, Formatting.Indented);
                 System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
             }
 
@@ -122,7 +122,7 @@ namespace DuplicateFinder
                 }
             }
 
-            string jsonDestination = JsonConvert.SerializeObject(DestinationFiles);
+            string jsonDestination = JsonConvert.SerializeObject(DestinationFiles, Formatting.Indented);
             System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\destination.json", jsonDestination);
 
             Compare(SourceFiles, DestinationFiles);
@@ -158,7 +158,11 @@ namespace DuplicateFinder
 
                     if (item.Hash == itemDest.Hash)
                     {
-                        fileMatch.Match = true;
+                        if (item.Size != 0)
+                        {
+                            fileMatch.Match = true;
+                        }
+                        
                         fileMatch.TypesMatched.Add("Hash");
                     }
 
@@ -188,7 +192,7 @@ namespace DuplicateFinder
                 }
             }
 
-            string json = JsonConvert.SerializeObject(fileMatches);
+            string json = JsonConvert.SerializeObject(fileMatches, Formatting.Indented);
             System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\matches.json", json);
         }
 

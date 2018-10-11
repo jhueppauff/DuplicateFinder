@@ -27,11 +27,12 @@ namespace DuplicateFinder
         private static void MainProcess()
         {
             List<Models.File> SourceFiles = new List<Models.File>();
-
+            Console.ResetColor();
             Console.WriteLine("Started Source Directory");
 
             if (!string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
             {
+                Console.ResetColor();
                 Console.WriteLine("Found Source Json, skipping read of Directory");
                 try
                 {
@@ -67,7 +68,6 @@ namespace DuplicateFinder
 
                         SourceFiles.Add(file);
                     }
-
                     catch (Exception ex)
                     {
                         Console.ResetColor();
@@ -82,7 +82,7 @@ namespace DuplicateFinder
                 string jsonSource = JsonConvert.SerializeObject(SourceFiles, Formatting.Indented);
                 System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
             }
-
+            Console.ResetColor();
             Console.WriteLine("Finished Source Directory");
             Console.WriteLine("Started Target Directory");
 
@@ -122,12 +122,13 @@ namespace DuplicateFinder
                 }
             }
 
+
             string jsonDestination = JsonConvert.SerializeObject(DestinationFiles, Formatting.Indented);
             System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\destination.json", jsonDestination);
 
             Compare(SourceFiles, DestinationFiles);
 
-
+            Console.ResetColor();
             Console.WriteLine("Finished, press any key to exit!");
             Console.ReadLine();
         }
@@ -162,7 +163,7 @@ namespace DuplicateFinder
                         {
                             fileMatch.Match = true;
                         }
-                        
+
                         fileMatch.TypesMatched.Add("Hash");
                     }
 
@@ -195,8 +196,6 @@ namespace DuplicateFinder
             string json = JsonConvert.SerializeObject(fileMatches, Formatting.Indented);
             System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\matches.json", json);
         }
-
-
 
         private static string GetFileHash(string path)
         {

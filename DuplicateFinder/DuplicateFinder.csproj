@@ -10,6 +10,7 @@
     <PackageProjectUrl>https://github.com/jhueppauff/DuplicateFinder</PackageProjectUrl>
     <ApplicationIcon />
     <StartupObject />
+    <Win32Resource />
   </PropertyGroup>
 
   <ItemGroup>

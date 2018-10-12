@@ -11,29 +11,29 @@ namespace DuplicateFinder
 {
     public static class Program
     {
+        private static FileHelper fileHelper;
         private static IConfigurationRoot configuration;
 
         public static void Main(string[] args)
         {
-            Console.WriteLine("Welcome to the File Duplicate Finder");
+            LogToConsole("Welcome to the File Duplicate Finder");
 
             // Create service collection
             ServiceCollection serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
-
+            fileHelper = new FileHelper();
             MainProcess();
         }
 
         private static void MainProcess()
         {
             List<Models.File> SourceFiles = new List<Models.File>();
-            Console.ResetColor();
-            Console.WriteLine("Started Source Directory");
+            
+            LogToConsole("Started Source Directory");
 
             if (!string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
             {
-                Console.ResetColor();
-                Console.WriteLine("Found Source Json, skipping read of Directory");
+                LogToConsole("Found Source Json, skipping read of Directory");
                 try
                 {
                     string json = System.IO.File.ReadAllText(configuration.GetSection("SourceJson").Value);
@@ -41,10 +41,8 @@ namespace DuplicateFinder
                 }
                 catch (Exception ex)
                 {
-                    Console.ResetColor();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Error while reading Source JSON:");
-                    Console.WriteLine(ex.Message);
+                    LogToConsole("Error while reading Source JSON:", ConsoleColor.Red);
+                    LogToConsole(ex.Message, ConsoleColor.Red);
                     throw;
                 }
             }
@@ -52,10 +50,14 @@ namespace DuplicateFinder
             {
                 DirectoryInfo directoryInfoSource = new DirectoryInfo(configuration.GetSection("SourcePath").Value);
 
-                foreach (var item in directoryInfoSource.EnumerateFiles("*", SearchOption.AllDirectories))
+                var sourceFiles = fileHelper.GetFiles(configuration.GetSection("SourcePath").Value, true);
+
+                foreach (var fileInfo in sourceFiles)
                 {
                     try
                     {
+                        var item = new FileInfo(fileInfo);
+
                         Models.File file = new Models.File
                         {
                             CreateDate = item.CreationTime,
@@ -70,9 +72,7 @@ namespace DuplicateFinder
                     }
                     catch (Exception ex)
                     {
-                        Console.ResetColor();
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(ex.Message);
+                        LogToConsole(ex.Message, ConsoleColor.Red);
                     }
                 }
             }
@@ -82,33 +82,34 @@ namespace DuplicateFinder
                 string jsonSource = JsonConvert.SerializeObject(SourceFiles, Formatting.Indented);
                 System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
             }
-            Console.ResetColor();
-            Console.WriteLine("Finished Source Directory");
-            Console.WriteLine("Started Target Directory");
+
+            LogToConsole("Finished Source Directory");
+            LogToConsole("Started Target Directory");
 
             List<Models.File> DestinationFiles = new List<Models.File>();
-            DirectoryInfo directoryInfoTarget = new DirectoryInfo(configuration.GetSection("DestinationPath").Value);
 
-            foreach (var item in directoryInfoTarget.EnumerateFiles("*", SearchOption.AllDirectories))
+            var destinationFiles = fileHelper.GetFiles(configuration.GetSection("DestinationPath").Value, true);
+
+            foreach (var item in destinationFiles)
             {
                 try
                 {
-                    if (item.DirectoryName.ToLowerInvariant().Contains(configuration.GetSection("SourcePath").Value.ToLowerInvariant()))
+                    var destinationFile = new FileInfo(item);
+
+                    if (destinationFile.DirectoryName.ToLowerInvariant().Contains(configuration.GetSection("SourcePath").Value.ToLowerInvariant()))
                     {
-                        Console.ResetColor();
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.WriteLine($"Info: Skipping File, as it is in the SourceDirectory {item.FullName}");
+                        LogToConsole($"Info: Skipping File, as it is in the SourceDirectory {destinationFile.FullName}", ConsoleColor.Blue);
                         continue;
                     }
 
                     Models.File file = new Models.File
                     {
-                        CreateDate = item.CreationTime,
-                        ModfiedDate = item.LastWriteTime,
-                        Name = item.Name,
-                        Path = item.FullName,
-                        Size = item.Length,
-                        Hash = GetFileHash(item.FullName)
+                        CreateDate = destinationFile.CreationTime,
+                        ModfiedDate = destinationFile.LastWriteTime,
+                        Name = destinationFile.Name,
+                        Path = destinationFile.FullName,
+                        Size = destinationFile.Length,
+                        Hash = GetFileHash(destinationFile.FullName)
                     };
 
                     DestinationFiles.Add(file);
@@ -116,9 +117,7 @@ namespace DuplicateFinder
 
                 catch (Exception ex)
                 {
-                    Console.ResetColor();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(ex.Message);
+                    LogToConsole(ex.Message, ConsoleColor.Red);
                 }
             }
 
@@ -128,8 +127,7 @@ namespace DuplicateFinder
 
             Compare(SourceFiles, DestinationFiles);
 
-            Console.ResetColor();
-            Console.WriteLine("Finished, press any key to exit!");
+            LogToConsole("Finished, press enter to exit!");
             Console.ReadLine();
         }
 
@@ -221,6 +219,13 @@ namespace DuplicateFinder
 
             // Add access to generic IConfigurationRoot
             serviceCollection.AddSingleton<IConfigurationRoot>(configuration);
+        }
+
+        private static void LogToConsole(string message, ConsoleColor color = ConsoleColor.White)
+        {
+            Console.ResetColor();
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
         }
     }
 }

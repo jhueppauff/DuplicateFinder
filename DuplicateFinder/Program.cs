@@ -16,7 +16,7 @@ namespace DuplicateFinder
 
         public static void Main(string[] args)
         {
-            LogToConsole("Welcome to the File Duplicate Finder");
+            LogToConsole("Welcome to the File Duplicate Finder", Models.LogLevel.Information);
 
             // Create service collection
             ServiceCollection serviceCollection = new ServiceCollection();
@@ -28,12 +28,12 @@ namespace DuplicateFinder
         private static void MainProcess()
         {
             List<Models.File> SourceFiles = new List<Models.File>();
-            
-            LogToConsole("Started Source Directory");
+
+            LogToConsole("Started Source Directory", Models.LogLevel.Information);
 
             if (!string.IsNullOrEmpty(configuration.GetSection("SourceJson").Value))
             {
-                LogToConsole("Found Source Json, skipping read of Directory");
+                LogToConsole("Found Source Json, skipping read of Directory", Models.LogLevel.Information);
                 try
                 {
                     string json = System.IO.File.ReadAllText(configuration.GetSection("SourceJson").Value);
@@ -41,8 +41,8 @@ namespace DuplicateFinder
                 }
                 catch (Exception ex)
                 {
-                    LogToConsole("Error while reading Source JSON:", ConsoleColor.Red);
-                    LogToConsole(ex.Message, ConsoleColor.Red);
+                    LogToConsole("Error while reading Source JSON:", Models.LogLevel.Error);
+                    LogToConsole(ex.Message, Models.LogLevel.Error);
                     throw;
                 }
             }
@@ -72,7 +72,7 @@ namespace DuplicateFinder
                     }
                     catch (Exception ex)
                     {
-                        LogToConsole(ex.Message, ConsoleColor.Red);
+                        LogToConsole(ex.Message, Models.LogLevel.Error);
                     }
                 }
             }
@@ -83,8 +83,8 @@ namespace DuplicateFinder
                 System.IO.File.WriteAllText(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\source.json", jsonSource);
             }
 
-            LogToConsole("Finished Source Directory");
-            LogToConsole("Started Target Directory");
+            LogToConsole("Finished Source Directory", Models.LogLevel.Information);
+            LogToConsole("Started Target Directory", Models.LogLevel.Information);
 
             List<Models.File> DestinationFiles = new List<Models.File>();
 
@@ -98,7 +98,7 @@ namespace DuplicateFinder
 
                     if (destinationFile.DirectoryName.ToLowerInvariant().Contains(configuration.GetSection("SourcePath").Value.ToLowerInvariant()))
                     {
-                        LogToConsole($"Info: Skipping File, as it is in the SourceDirectory {destinationFile.FullName}", ConsoleColor.Blue);
+                        LogToConsole($"Info: Skipping File, as it is in the SourceDirectory {destinationFile.FullName}", Models.LogLevel.Error);
                         continue;
                     }
 
@@ -117,7 +117,7 @@ namespace DuplicateFinder
 
                 catch (Exception ex)
                 {
-                    LogToConsole(ex.Message, ConsoleColor.Red);
+                    LogToConsole(ex.Message, Models.LogLevel.Error);
                 }
             }
 
@@ -127,7 +127,7 @@ namespace DuplicateFinder
 
             Compare(SourceFiles, DestinationFiles);
 
-            LogToConsole("Finished, press enter to exit!");
+            LogToConsole("Finished, press enter to exit!", Models.LogLevel.Information);
             Console.ReadLine();
         }
 
@@ -209,10 +209,6 @@ namespace DuplicateFinder
 
         private static void ConfigureServices(ServiceCollection serviceCollection)
         {
-            serviceCollection.AddSingleton(new LoggerFactory()
-              .AddConsole());
-            serviceCollection.AddLogging();
-
             configuration = new ConfigurationBuilder()
                 .SetBasePath(System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName)
                 .AddJsonFile("appsettings.json", false).Build();
@@ -221,11 +217,44 @@ namespace DuplicateFinder
             serviceCollection.AddSingleton<IConfigurationRoot>(configuration);
         }
 
-        private static void LogToConsole(string message, ConsoleColor color = ConsoleColor.White)
+        public static void LogToConsole(string message, Models.LogLevel logLevel)
         {
+            string logPath = System.IO.Directory.GetParent(AppContext.BaseDirectory).FullName + @"\log.txt";
+
             Console.ResetColor();
-            Console.ForegroundColor = color;
-            Console.WriteLine(message);
+            switch (logLevel)
+            {
+                case Models.LogLevel.Debug:
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.Verbose:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.Information:
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.Warning:
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.Error:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.Critical:
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine(message);
+                    break;
+                case Models.LogLevel.None:
+                    Console.WriteLine(message);
+                    break;
+                default:
+                    break;
+            }
+
+            File.AppendAllText(logPath, $"{Environment.NewLine}{logLevel} - {DateTime.Now.ToLongTimeString()}: {message}");
         }
     }
 }

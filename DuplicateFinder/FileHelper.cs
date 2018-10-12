@@ -22,9 +22,7 @@ namespace DuplicateFinder
                 }
                 catch (Exception ex)
                 {
-                    Console.ResetColor();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(ex.Message);
+                    Program.LogToConsole(ex.Message, Models.LogLevel.Error);
                 }
                 try
                 {
@@ -39,9 +37,7 @@ namespace DuplicateFinder
                 }
                 catch (Exception ex)
                 {
-                    Console.ResetColor();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(ex.Message);
+                    Program.LogToConsole(ex.Message, Models.LogLevel.Error);
                 }
             }
             return files;
